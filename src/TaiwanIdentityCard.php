@@ -24,6 +24,15 @@ class TaiwanIdentityCard
     protected $weights = [8, 7, 6, 5, 4, 3, 2, 1, 1];
 
     /**
+     * 外籍人士性別
+     *
+     * @var array
+     */
+    protected $genders = [
+        'A' => 0, 'B' => 8, 'C' => 6, 'D' => 4,
+    ];
+
+    /**
      * Validate ID number.
      *
      * @param  string  $id_number
@@ -31,22 +40,22 @@ class TaiwanIdentityCard
      */
     public function check(string $id_number = '')
     {
-        if (!$this->checkIdNumberFormat($id_number)) {
-            return false;
+        // 身份證
+        if ($this->checkIdNumberFormat($id_number)) {
+            return $this->checkNormal($id_number);
         }
 
-        $id_number_chars = str_split($id_number);
-
-        if (!in_array($id_number_chars[1], [1, 2])) {
-            return false;
+        // 統一證號
+        if ($this->checkForeignIdNumberFormat($id_number)) {
+            return $this->checkForeign($id_number);
         }
 
-        $count = $this->locations[$id_number_chars[0]];
-        foreach ($this->weights as $i => $weight) {
-            $count += $id_number_chars[$i + 1] * $weight;
+        // 新型統一證號
+        if ($this->checkNewForeignIdNumberFormat($id_number)) {
+            return $this->checkNewForeign($id_number);
         }
 
-        return ($count % 10 === 0) ? true : false;
+        return false;
     }
 
     /**
@@ -93,6 +102,91 @@ class TaiwanIdentityCard
      */
     private function checkIdNumberFormat($id_number)
     {
-        return (preg_match('/(^[A-Z][0-9]{9})/u', $id_number) === 1) ? true : false;
+        return (preg_match('/(^[A-Z][1-2][0-9]{8})/u', $id_number) === 1) ? true : false;
+    }
+
+    /**
+     * Check ID number format.
+     *
+     * @param  string  $id_number
+     * @return boolean
+     */
+    private function checkForeignIdNumberFormat($id_number)
+    {
+        return (preg_match('/(^[A-Z][A-D][0-9]{8})/u', $id_number) === 1) ? true : false;
+    }
+
+    /**
+     * Check ID number format.
+     *
+     * @param  string  $id_number
+     * @return boolean
+     */
+    private function checkNewForeignIdNumberFormat($id_number)
+    {
+        return (preg_match('/(^[A-Z][8-9][0-9]{8})/u', $id_number) === 1) ? true : false;
+    }
+
+    /**
+     * 身份證字號
+     *
+     * @param string $id_number
+     * @return boolean
+     */
+    private function checkNormal($id_number)
+    {
+        $id_number_chars = str_split($id_number);
+
+        $count = $this->locations[$id_number_chars[0]];
+        foreach ($this->weights as $i => $weight) {
+            $count += $id_number_chars[$i + 1] * $weight;
+        }
+
+        return ($count % 10 === 0) ? true : false;
+    }
+
+    /**
+     * 外籍人士統一證號
+     *
+     * @param string $id_number
+     * @return boolean
+     */
+    private function checkForeign($id_number)
+    {
+        $id_number_chars = str_split($id_number);
+
+        $count = 0;
+        $count += $this->locations[$id_number_chars[0]];
+        $count += $this->genders[$id_number_chars[1]];
+
+        for ($i = 2; $i < 9; $i++) {
+            $count += ($id_number_chars[$i] * (9 - $i) % 10);
+        }
+
+        $check = (10 - ($count % 10)) % 10;
+
+        return ($id_number_chars[9] == $check) ? true : false;
+    }
+
+    /**
+     * 新型外籍人士統一證號
+     *
+     * @param string $id_number
+     * @return boolean
+     */
+    private function checkNewForeign($id_number)
+    {
+        $id_number_chars = str_split($id_number);
+
+        $count = 0;
+        $count += $this->foreign_locations[$id_number_chars[0]];
+
+        for ($i = 1; $i < 9; $i++) {
+            $count += ($id_number_chars[$i] * (9 - $i) % 10);
+        }
+
+        $check = (10 - ($count % 10)) % 10;
+
+        return ($id_number_chars[9] == $check) ? true : false;
     }
 }
