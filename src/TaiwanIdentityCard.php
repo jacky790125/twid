@@ -85,7 +85,9 @@ class TaiwanIdentityCard
 
         $count = $this->locations[$id_number_chars[0]];
         foreach ($this->weights as $i => $weight) {
-            if ($i == 8) break;
+            if ($i == 8) {
+                break;
+            }
             $count += $id_number_chars[$i + 1] * $weight;
         }
 
@@ -179,7 +181,7 @@ class TaiwanIdentityCard
         $id_number_chars = str_split($id_number);
 
         $count = 0;
-        $count += $this->foreign_locations[$id_number_chars[0]];
+        $count += $this->locations[$id_number_chars[0]];
 
         for ($i = 1; $i < 9; $i++) {
             $count += ($id_number_chars[$i] * (9 - $i) % 10);
