@@ -44,6 +44,14 @@ Now, you can use `check` method to validate ID Number:
 ```php
 $taiwanIdCard->check('A123456789'); // true
 $taiwanIdCard->check('A223456789'); // false
+
+// ID NO.
+$taiwanIdCard->check('FA12345689'); // true
+$taiwanIdCard->check('HE23456789'); // false
+
+// New ID NO.
+$taiwanIdCard->check('A800000014'); // true
+$taiwanIdCard->check('A690000013'); // false
 ```
 
 Or generate a fake ID Number:
